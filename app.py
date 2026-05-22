@@ -69,6 +69,35 @@ section[data-testid="stSidebar"] [data-testid="stExpanderToggleIcon"] {
 #MainMenu, footer, header { visibility: hidden }
 .stDeployButton { display: none }
 
+/* منطقة رفع الملف */
+section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {
+  background: rgba(255,255,255,.08) !important;
+  border: 2px dashed rgba(255,255,255,.35) !important;
+  border-radius: 14px !important;
+  transition: all .3s ease !important;
+}
+section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"]:hover {
+  background: rgba(255,255,255,.15) !important;
+  border-color: rgba(255,255,255,.6) !important;
+}
+section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button {
+  background: linear-gradient(135deg,#6366F1,#8B5CF6) !important;
+  border: none !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+  padding: 8px 20px !important;
+  box-shadow: 0 4px 15px rgba(99,102,241,.4) !important;
+}
+section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button:hover {
+  background: linear-gradient(135deg,#4F46E5,#7C3AED) !important;
+  box-shadow: 0 6px 20px rgba(99,102,241,.5) !important;
+  transform: translateY(-1px) !important;
+}
+section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzoneInstructions"] {
+  color: rgba(255,255,255,.6) !important;
+}
+
 /* القائمة الجانبية */
 section[data-testid="stSidebar"] {
   background: linear-gradient(180deg,#1E1B4B 0%,#312E81 60%,#4338CA 100%) !important;
