@@ -1,0 +1,19 @@
+# قاعدة البيانات المحلية — لا ترفعها على GitHub
+xceer_data.db
+*.db
+*.sqlite
+
+# أسرار الاتصال — لا ترفعها أبداً
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+.venv/
+
+# نظام التشغيل
+.DS_Store
+Thumbs.db
