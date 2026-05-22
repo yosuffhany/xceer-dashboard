@@ -293,6 +293,24 @@ section[data-testid="stSidebar"] [data-testid="stExpander"] {
 .amt-m { font-size: 15px; font-weight: 800; margin-bottom: 2px }
 .amt-s { font-size: 11px; color: #9CA3AF }
 
+/* أنيميشن ظهور البطاقات */
+@keyframes kpiReveal {
+  from { opacity: 0; transform: translateY(10px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+.kpi-card { animation: kpiReveal .55s cubic-bezier(.4,0,.2,1) both; }
+.kpi-card:nth-child(2) { animation-delay: .07s }
+.kpi-card:nth-child(3) { animation-delay: .14s }
+.kpi-card:nth-child(4) { animation-delay: .21s }
+
+/* أنيميشن الرقم */
+@keyframes numPop {
+  0%   { opacity: 0; transform: scale(.7); }
+  70%  { transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.kpi-num { animation: numPop .6s cubic-bezier(.4,0,.2,1) .2s both; }
+
 /* إطار العداد */
 .g-wrap {
   background: rgba(255,255,255,.7);
@@ -371,31 +389,19 @@ def fmt_short(n):
         return f'{n/1_000:.0f} ألف'
     return f'{round(n):,}'
 
-_kc = [0]
-
 def kpi_card(label, value, icon, color, foot, badge=None, btype='bb', is_pct=False):
-    _kc[0] += 1
-    uid  = f'kc{_kc[0]}'
-    ival = round(value * 10) if is_pct else round(value)
-    jexp = '(Math.round(eased*t)/10).toFixed(1)+"%"' if is_pct else 'Math.round(eased*t).toLocaleString()'
-    bdg  = f'<span class="kpi-badge {btype}">{badge}</span>' if badge else ''
+    """بطاقة KPI مع CSS animation — بدون JS لضمان الظهور الصحيح في Streamlit"""
+    if is_pct:
+        display_val = f'{value:.1f}٪'
+    else:
+        display_val = fmt(round(value))
+    bdg = f'<span class="kpi-badge {btype}">{badge}</span>' if badge else ''
     return f"""<div class="kpi-card" style="--c:{color}">
   <div class="kpi-top"><div class="kpi-icon-box">{icon}</div>{bdg}</div>
   <div class="kpi-lbl">{label}</div>
-  <div class="kpi-num" id="{uid}">—</div>
+  <div class="kpi-num">{display_val}</div>
   <div class="kpi-foot">{foot}</div>
-</div>
-<script>(function(){{
-  var el=document.getElementById('{uid}');if(!el)return;
-  var t={ival},s=null,d=1400;
-  function f(n){{
-    if(!s)s=n;
-    var p=Math.min((n-s)/d,1),eased=1-Math.pow(1-p,3);
-    el.textContent={jexp};
-    if(p<1)requestAnimationFrame(f);
-  }}
-  requestAnimationFrame(f);
-}})();</script>"""
+</div>"""
 
 def sec_hdr(text, icon, color='#4F46E5'):
     return (f'<div class="s-hdr">'
@@ -667,8 +673,6 @@ avg_c = tot_c / nm
 rc = '#10B981' if rate >= 65 else '#F59E0B' if rate >= 40 else '#EF4444'
 rt = '✅ أداء ممتاز' if rate >= 65 else '⚠️ أداء متوسط' if rate >= 40 else '❌ يحتاج متابعة'
 rb = 'bg' if rate >= 65 else 'by' if rate >= 40 else 'br'
-
-_kc[0] = 0  # إعادة تعيين عداد الأنيميشن عند كل تحديث
 
 # ══════════════════════════════════════════════════════════════
 # رأس الصفحة
