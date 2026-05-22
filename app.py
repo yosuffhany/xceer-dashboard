@@ -815,14 +815,14 @@ if not reps.empty:
             use_container_width=True,
             height=420,
             column_config={
-                'المندوب'            : st.column_config.TextColumn(width='medium'),
-                'مبيعات أوفست'       : st.column_config.TextColumn(width='medium'),
-                'مبيعات ديجيتال'     : st.column_config.TextColumn(width='medium'),
-                'إجمالي المبيعات'    : st.column_config.TextColumn(width='medium'),
-                'صافي التحصيل'       : st.column_config.TextColumn(width='medium'),
-                'نسبة التحصيل'       : st.column_config.TextColumn(width='small'),
-                'متوسط مبيعات/شهر'   : st.column_config.TextColumn(width='medium'),
-                'متوسط تحصيل/شهر'    : st.column_config.TextColumn(width='medium'),
+                'المندوب'          : st.column_config.TextColumn('المندوب',          width='medium'),
+                'مبيعات أوفست'     : st.column_config.TextColumn('مبيعات أوفست',     width='medium'),
+                'مبيعات ديجيتال'   : st.column_config.TextColumn('مبيعات ديجيتال',   width='medium'),
+                'إجمالي المبيعات'  : st.column_config.TextColumn('إجمالي المبيعات',  width='medium'),
+                'صافي التحصيل'     : st.column_config.TextColumn('صافي التحصيل',     width='medium'),
+                'نسبة التحصيل'     : st.column_config.TextColumn('نسبة التحصيل',     width='small'),
+                'متوسط مبيعات/شهر' : st.column_config.TextColumn('متوسط مبيعات/شهر', width='medium'),
+                'متوسط تحصيل/شهر'  : st.column_config.TextColumn('متوسط تحصيل/شهر',  width='medium'),
             }
         )
 else:
@@ -844,15 +844,16 @@ if not df_s.empty:
     clients.index = range(1, len(clients)+1)
     clients.columns = ['اسم العميل', 'إجمالي المبيعات', 'عدد الحركات', 'المندوب المسؤول']
     clients['إجمالي المبيعات'] = clients['إجمالي المبيعات'].apply(lambda x: f'{x:,.0f} ر.س')
+    clients['عدد الحركات']     = clients['عدد الحركات'].apply(lambda x: f'{int(x):,}')
     st.dataframe(
         clients,
         use_container_width=True,
         height=400,
         column_config={
-            'اسم العميل'       : st.column_config.TextColumn(width='large'),
-            'إجمالي المبيعات'  : st.column_config.TextColumn(width='medium'),
-            'عدد الحركات'      : st.column_config.TextColumn(width='small'),
-            'المندوب المسؤول'  : st.column_config.TextColumn(width='medium'),
+            'اسم العميل'      : st.column_config.TextColumn('اسم العميل',      width='large'),
+            'إجمالي المبيعات' : st.column_config.TextColumn('إجمالي المبيعات', width='medium'),
+            'عدد الحركات'     : st.column_config.TextColumn('عدد الحركات',     width='small'),
+            'المندوب المسؤول' : st.column_config.TextColumn('المندوب المسؤول', width='medium'),
         }
     )
 else:
