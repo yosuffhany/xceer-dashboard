@@ -135,18 +135,25 @@ section[data-testid="stSidebar"] [data-baseweb="select"] svg {
   fill: rgba(255,255,255,.8) !important;
 }
 /* Dropdown list */
-[data-baseweb="popover"] [data-baseweb="menu"] {
-  background: #2D2B6B !important;
-  border: 1px solid rgba(255,255,255,.2) !important;
+[data-baseweb="popover"] ul {
+  background: #1E1B4B !important;
+  border: 1px solid rgba(255,255,255,.25) !important;
   border-radius: 12px !important;
+  padding: 4px !important;
 }
 [data-baseweb="popover"] [role="option"] {
-  color: #E0E7FF !important;
+  color: #ffffff !important;
   font-family: 'Cairo', sans-serif !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  margin: 2px 0 !important;
 }
-[data-baseweb="popover"] [role="option"]:hover,
+[data-baseweb="popover"] [role="option"]:hover {
+  background: rgba(99,102,241,.5) !important;
+  color: #fff !important;
+}
 [data-baseweb="popover"] [aria-selected="true"] {
-  background: rgba(99,102,241,.4) !important;
+  background: #4F46E5 !important;
   color: #fff !important;
 }
 
@@ -803,7 +810,21 @@ if not reps.empty:
                     'صافي التحصيل','متوسط مبيعات/شهر','متوسط تحصيل/شهر']:
             disp[col] = disp[col].apply(lambda x: f'{x:,.0f}')
         disp['نسبة التحصيل'] = disp['نسبة التحصيل'].apply(lambda x: f'{x:.1f}٪')
-        st.dataframe(disp, use_container_width=True, height=420)
+        st.dataframe(
+            disp,
+            use_container_width=True,
+            height=420,
+            column_config={
+                'المندوب'            : st.column_config.TextColumn(width='medium'),
+                'مبيعات أوفست'       : st.column_config.TextColumn(width='medium'),
+                'مبيعات ديجيتال'     : st.column_config.TextColumn(width='medium'),
+                'إجمالي المبيعات'    : st.column_config.TextColumn(width='medium'),
+                'صافي التحصيل'       : st.column_config.TextColumn(width='medium'),
+                'نسبة التحصيل'       : st.column_config.TextColumn(width='small'),
+                'متوسط مبيعات/شهر'   : st.column_config.TextColumn(width='medium'),
+                'متوسط تحصيل/شهر'    : st.column_config.TextColumn(width='medium'),
+            }
+        )
 else:
     st.info("لا توجد بيانات مناديب للفترة المختارة")
 
@@ -823,7 +844,17 @@ if not df_s.empty:
     clients.index = range(1, len(clients)+1)
     clients.columns = ['اسم العميل', 'إجمالي المبيعات', 'عدد الحركات', 'المندوب المسؤول']
     clients['إجمالي المبيعات'] = clients['إجمالي المبيعات'].apply(lambda x: f'{x:,.0f} ر.س')
-    st.dataframe(clients, use_container_width=True, height=400)
+    st.dataframe(
+        clients,
+        use_container_width=True,
+        height=400,
+        column_config={
+            'اسم العميل'       : st.column_config.TextColumn(width='large'),
+            'إجمالي المبيعات'  : st.column_config.TextColumn(width='medium'),
+            'عدد الحركات'      : st.column_config.TextColumn(width='small'),
+            'المندوب المسؤول'  : st.column_config.TextColumn(width='medium'),
+        }
+    )
 else:
     st.info("لا توجد بيانات عملاء للفترة المختارة")
 
