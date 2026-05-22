@@ -118,6 +118,38 @@ section[data-testid="stSidebar"] .stButton > button {
 section[data-testid="stSidebar"] .stButton > button:hover {
   background: rgba(255,255,255,.22) !important;
 }
+
+/* Selectbox في الـ Sidebar */
+section[data-testid="stSidebar"] [data-baseweb="select"] > div,
+section[data-testid="stSidebar"] [data-baseweb="select"] > div:hover {
+  background: rgba(255,255,255,.15) !important;
+  border: 1.5px solid rgba(255,255,255,.4) !important;
+  border-radius: 10px !important;
+}
+section[data-testid="stSidebar"] [data-baseweb="select"] span,
+section[data-testid="stSidebar"] [data-baseweb="select"] div {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+section[data-testid="stSidebar"] [data-baseweb="select"] svg {
+  fill: rgba(255,255,255,.8) !important;
+}
+/* Dropdown list */
+[data-baseweb="popover"] [data-baseweb="menu"] {
+  background: #2D2B6B !important;
+  border: 1px solid rgba(255,255,255,.2) !important;
+  border-radius: 12px !important;
+}
+[data-baseweb="popover"] [role="option"] {
+  color: #E0E7FF !important;
+  font-family: 'Cairo', sans-serif !important;
+}
+[data-baseweb="popover"] [role="option"]:hover,
+[data-baseweb="popover"] [aria-selected="true"] {
+  background: rgba(99,102,241,.4) !important;
+  color: #fff !important;
+}
+
 section[data-testid="stSidebar"] [data-testid="stExpander"] {
   background: rgba(255,255,255,.08) !important;
   border: 1px solid rgba(255,255,255,.15) !important;
