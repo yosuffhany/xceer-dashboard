@@ -339,9 +339,23 @@ section[data-testid="stSidebar"] [data-testid="stExpander"] {
   background: #4F46E5 !important; color: #fff !important;
 }
 
-/* الجداول */
+/* الجداول — توسيط كامل */
 .stDataFrame { direction: rtl }
-[data-testid="stDataFrame"] * { direction: rtl; text-align: right }
+[data-testid="stDataFrame"] [role="gridcell"],
+[data-testid="stDataFrame"] [role="columnheader"] {
+  text-align: center !important;
+  justify-content: center !important;
+}
+[data-testid="stDataFrame"] [role="gridcell"] > div,
+[data-testid="stDataFrame"] [role="columnheader"] > div,
+[data-testid="stDataFrame"] [role="gridcell"] span,
+[data-testid="stDataFrame"] [role="columnheader"] span {
+  text-align: center !important;
+  justify-content: center !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+}
 
 /* متجاوب */
 @media screen and (max-width: 900px) {
@@ -806,29 +820,27 @@ if not reps.empty:
         disp = reps[['rep_name','off_sales','dig_sales','total_sales',
                      'total_collect','collect_rate','avg_sales','avg_collect']].copy()
         disp.index = range(1, len(disp)+1)
-        # أسماء أعمدة مختصرة لتتسع في الجدول
         disp.columns = [
-            'المندوب', 'أوفست (ر.س)', 'ديجيتال (ر.س)', 'الإجمالي (ر.س)',
-            'التحصيل (ر.س)', 'النسبة', 'متوسط م/شهر', 'متوسط ت/شهر'
+            'المندوب', 'أوفست', 'ديجيتال', 'الإجمالي',
+            'التحصيل', 'النسبة ٪', 'متوسط مبيعات', 'متوسط تحصيل'
         ]
-        # تنسيق مختصر للأرقام الكبيرة: ألف / م
-        for col in ['أوفست (ر.س)','ديجيتال (ر.س)','الإجمالي (ر.س)',
-                    'التحصيل (ر.س)','متوسط م/شهر','متوسط ت/شهر']:
-            disp[col] = disp[col].apply(fmt_short)
-        disp['النسبة'] = disp['النسبة'].apply(lambda x: f'{x:.1f}٪')
+        # أرقام كاملة مع فاصل الآلاف
+        for col in ['أوفست','ديجيتال','الإجمالي','التحصيل','متوسط مبيعات','متوسط تحصيل']:
+            disp[col] = disp[col].apply(lambda x: f'{x:,.0f}')
+        disp['النسبة ٪'] = disp['النسبة ٪'].apply(lambda x: f'{x:.1f}٪')
         st.dataframe(
             disp,
             use_container_width=True,
             height=420,
             column_config={
-                'المندوب'        : st.column_config.TextColumn('المندوب',        width='medium'),
-                'أوفست (ر.س)'   : st.column_config.TextColumn('أوفست (ر.س)',   width='small'),
-                'ديجيتال (ر.س)' : st.column_config.TextColumn('ديجيتال (ر.س)', width='small'),
-                'الإجمالي (ر.س)': st.column_config.TextColumn('الإجمالي (ر.س)',width='small'),
-                'التحصيل (ر.س)' : st.column_config.TextColumn('التحصيل (ر.س)', width='small'),
-                'النسبة'         : st.column_config.TextColumn('النسبة',         width='small'),
-                'متوسط م/شهر'   : st.column_config.TextColumn('متوسط م/شهر',   width='small'),
-                'متوسط ت/شهر'   : st.column_config.TextColumn('متوسط ت/شهر',   width='small'),
+                'المندوب'      : st.column_config.TextColumn('المندوب',      width='medium'),
+                'أوفست'        : st.column_config.TextColumn('أوفست (ر.س)', width='medium'),
+                'ديجيتال'      : st.column_config.TextColumn('ديجيتال (ر.س)',width='medium'),
+                'الإجمالي'     : st.column_config.TextColumn('الإجمالي (ر.س)',width='medium'),
+                'التحصيل'      : st.column_config.TextColumn('التحصيل (ر.س)',width='medium'),
+                'النسبة ٪'     : st.column_config.TextColumn('النسبة ٪',     width='small'),
+                'متوسط مبيعات' : st.column_config.TextColumn('متوسط مبيعات',width='medium'),
+                'متوسط تحصيل'  : st.column_config.TextColumn('متوسط تحصيل', width='medium'),
             }
         )
 else:
@@ -848,18 +860,18 @@ if not df_s.empty:
                .reset_index()
                .sort_values('total_sales', ascending=False))
     clients.index = range(1, len(clients)+1)
-    clients.columns = ['اسم العميل', 'إجمالي المبيعات', 'عدد الحركات', 'المندوب المسؤول']
-    clients['إجمالي المبيعات'] = clients['إجمالي المبيعات'].apply(lambda x: f'{x:,.0f} ر.س')
-    clients['عدد الحركات']     = clients['عدد الحركات'].apply(lambda x: f'{int(x):,}')
+    clients.columns = ['اسم العميل', 'المبيعات (ر.س)', 'الحركات', 'المندوب']
+    clients['المبيعات (ر.س)'] = clients['المبيعات (ر.س)'].apply(lambda x: f'{x:,.0f}')
+    clients['الحركات']         = clients['الحركات'].apply(lambda x: f'{int(x):,}')
     st.dataframe(
         clients,
         use_container_width=True,
         height=400,
         column_config={
-            'اسم العميل'      : st.column_config.TextColumn('اسم العميل',      width='large'),
-            'إجمالي المبيعات' : st.column_config.TextColumn('إجمالي المبيعات', width='medium'),
-            'عدد الحركات'     : st.column_config.TextColumn('عدد الحركات',     width='small'),
-            'المندوب المسؤول' : st.column_config.TextColumn('المندوب المسؤول', width='medium'),
+            'اسم العميل'     : st.column_config.TextColumn('اسم العميل',     width='large'),
+            'المبيعات (ر.س)': st.column_config.TextColumn('المبيعات (ر.س)',width='medium'),
+            'الحركات'        : st.column_config.TextColumn('الحركات',        width='small'),
+            'المندوب'        : st.column_config.TextColumn('المندوب',        width='medium'),
         }
     )
 else:
