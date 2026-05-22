@@ -140,6 +140,13 @@ section[data-testid="stSidebar"] .stButton>button:hover{
   box-shadow:0 4px 24px rgba(0,0,0,.05);padding:10px;
 }
 
+/* ── Fix arrow_right icon text ── */
+section[data-testid="stSidebar"] .streamlit-expanderHeader p,
+section[data-testid="stSidebar"] .st-emotion-cache-sh2krr p {
+  display:none!important;
+}
+[data-testid="stExpander"] summary svg { color:#E0E7FF!important }
+
 /* ── Tabs ── */
 .stTabs [data-baseweb="tab-list"]{
   background:rgba(255,255,255,.6)!important;
