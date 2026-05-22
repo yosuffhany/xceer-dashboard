@@ -806,27 +806,29 @@ if not reps.empty:
         disp = reps[['rep_name','off_sales','dig_sales','total_sales',
                      'total_collect','collect_rate','avg_sales','avg_collect']].copy()
         disp.index = range(1, len(disp)+1)
+        # أسماء أعمدة مختصرة لتتسع في الجدول
         disp.columns = [
-            'المندوب', 'مبيعات أوفست', 'مبيعات ديجيتال', 'إجمالي المبيعات',
-            'صافي التحصيل', 'نسبة التحصيل', 'متوسط مبيعات/شهر', 'متوسط تحصيل/شهر'
+            'المندوب', 'أوفست (ر.س)', 'ديجيتال (ر.س)', 'الإجمالي (ر.س)',
+            'التحصيل (ر.س)', 'النسبة', 'متوسط م/شهر', 'متوسط ت/شهر'
         ]
-        for col in ['مبيعات أوفست','مبيعات ديجيتال','إجمالي المبيعات',
-                    'صافي التحصيل','متوسط مبيعات/شهر','متوسط تحصيل/شهر']:
-            disp[col] = disp[col].apply(lambda x: f'{x:,.0f}')
-        disp['نسبة التحصيل'] = disp['نسبة التحصيل'].apply(lambda x: f'{x:.1f}٪')
+        # تنسيق مختصر للأرقام الكبيرة: ألف / م
+        for col in ['أوفست (ر.س)','ديجيتال (ر.س)','الإجمالي (ر.س)',
+                    'التحصيل (ر.س)','متوسط م/شهر','متوسط ت/شهر']:
+            disp[col] = disp[col].apply(fmt_short)
+        disp['النسبة'] = disp['النسبة'].apply(lambda x: f'{x:.1f}٪')
         st.dataframe(
             disp,
             use_container_width=True,
             height=420,
             column_config={
-                'المندوب'          : st.column_config.TextColumn('المندوب',          width='medium'),
-                'مبيعات أوفست'     : st.column_config.TextColumn('مبيعات أوفست',     width='medium'),
-                'مبيعات ديجيتال'   : st.column_config.TextColumn('مبيعات ديجيتال',   width='medium'),
-                'إجمالي المبيعات'  : st.column_config.TextColumn('إجمالي المبيعات',  width='medium'),
-                'صافي التحصيل'     : st.column_config.TextColumn('صافي التحصيل',     width='medium'),
-                'نسبة التحصيل'     : st.column_config.TextColumn('نسبة التحصيل',     width='small'),
-                'متوسط مبيعات/شهر' : st.column_config.TextColumn('متوسط مبيعات/شهر', width='medium'),
-                'متوسط تحصيل/شهر'  : st.column_config.TextColumn('متوسط تحصيل/شهر',  width='medium'),
+                'المندوب'        : st.column_config.TextColumn('المندوب',        width='medium'),
+                'أوفست (ر.س)'   : st.column_config.TextColumn('أوفست (ر.س)',   width='small'),
+                'ديجيتال (ر.س)' : st.column_config.TextColumn('ديجيتال (ر.س)', width='small'),
+                'الإجمالي (ر.س)': st.column_config.TextColumn('الإجمالي (ر.س)',width='small'),
+                'التحصيل (ر.س)' : st.column_config.TextColumn('التحصيل (ر.س)', width='small'),
+                'النسبة'         : st.column_config.TextColumn('النسبة',         width='small'),
+                'متوسط م/شهر'   : st.column_config.TextColumn('متوسط م/شهر',   width='small'),
+                'متوسط ت/شهر'   : st.column_config.TextColumn('متوسط ت/شهر',   width='small'),
             }
         )
 else:
