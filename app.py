@@ -847,6 +847,134 @@ else:
     st.info("لا توجد بيانات مناديب للفترة المختارة")
 
 # ══════════════════════════════════════════════════════════════
+# استعراض مندوب — تفصيلي
+# ══════════════════════════════════════════════════════════════
+st.markdown(sec_hdr('استعراض مندوب بالتفصيل', '🔍', '#7C3AED'), unsafe_allow_html=True)
+
+if not df_s.empty:
+    rep_list = sorted([r for r in df_s['rep_name'].unique() if r and r != 'غير محدد'])
+    if rep_list:
+        sel_rep = st.selectbox('👤 اختر المندوب:', rep_list, key='rep_detail')
+
+        rep_s = df_s[df_s['rep_name'] == sel_rep].copy()
+        rep_c = df_c[df_c['rep_name'] == sel_rep].copy() if not df_c.empty else pd.DataFrame()
+
+        r_tot_s   = rep_s['net'].sum()
+        r_tot_c   = rep_c['net_amount'].sum() if not rep_c.empty else 0.0
+        r_uncoll  = max(r_tot_s - r_tot_c, 0)
+        r_rate    = (r_tot_c / r_tot_s * 100) if r_tot_s > 0 else 0.0
+        r_color   = '#10B981' if r_rate >= 65 else '#F59E0B' if r_rate >= 40 else '#EF4444'
+
+        # بطاقات ملخص المندوب
+        ra, rb, rc2, rd = st.columns(4)
+        with ra:
+            st.markdown(kpi_card(
+                'إجمالي المبيعات', r_tot_s, '💰', '#4F46E5',
+                'ريال سعودي', badge=f'{len(rep_s):,} حركة', btype='bb'
+            ), unsafe_allow_html=True)
+        with rb:
+            st.markdown(kpi_card(
+                'صافي التحصيل', r_tot_c, '✅', r_color,
+                f'نسبة {r_rate:.1f}٪',
+                badge='✅ ممتاز' if r_rate >= 65 else '⚠️ متوسط' if r_rate >= 40 else '❌ ضعيف',
+                btype='bg' if r_rate >= 65 else 'by' if r_rate >= 40 else 'br'
+            ), unsafe_allow_html=True)
+        with rc2:
+            st.markdown(kpi_card(
+                'المتبقي غير محصّل', r_uncoll, '⏳', '#F59E0B',
+                'ريال سعودي', badge='متبقي', btype='by'
+            ), unsafe_allow_html=True)
+        with rd:
+            st.markdown(kpi_card(
+                'نسبة التحصيل', r_rate, '📊', r_color,
+                '', badge=f'{r_rate:.1f}٪', btype='bg' if r_rate >= 65 else 'by' if r_rate >= 40 else 'br',
+                is_pct=True
+            ), unsafe_allow_html=True)
+
+        st.markdown('<div style="height:12px"></div>', unsafe_allow_html=True)
+
+        # تبويبات التفاصيل
+        t1, t2, t3 = st.tabs(['📋 حركات المبيعات', '💰 التحصيلات', '⏳ غير المحصّل'])
+
+        # ── تبويب 1: حركات المبيعات ──────────────────────────────
+        with t1:
+            if not rep_s.empty:
+                sd = rep_s[['date','client_name','type','net']].copy()
+                sd.columns = ['التاريخ','العميل','النوع','المبلغ']
+                sd['المبلغ'] = sd['المبلغ'].apply(lambda x: f'{x:,.0f}')
+                sd = sd.sort_values('التاريخ', ascending=False).reset_index(drop=True)
+                sd.index = range(1, len(sd)+1)
+                st.caption(f'إجمالي {len(sd):,} حركة — {fmt(r_tot_s)} ر.س')
+                st.dataframe(sd, use_container_width=True, height=380,
+                    column_config={
+                        'التاريخ' : st.column_config.TextColumn('التاريخ', width='small'),
+                        'العميل'  : st.column_config.TextColumn('العميل',  width='large'),
+                        'النوع'   : st.column_config.TextColumn('النوع',   width='small'),
+                        'المبلغ'  : st.column_config.TextColumn('المبلغ (ر.س)', width='medium'),
+                    })
+            else:
+                st.info('لا توجد حركات مبيعات لهذا المندوب في الفترة المختارة')
+
+        # ── تبويب 2: التحصيلات ───────────────────────────────────
+        with t2:
+            if not rep_c.empty:
+                cd = rep_c[['date','client_name','collection_type','net_amount']].copy()
+                cd.columns = ['التاريخ','العميل','نوع التحصيل','المبلغ']
+                cd['المبلغ'] = cd['المبلغ'].apply(lambda x: f'{x:,.0f}')
+                cd = cd.sort_values('التاريخ', ascending=False).reset_index(drop=True)
+                cd.index = range(1, len(cd)+1)
+                st.caption(f'إجمالي {len(cd):,} عملية تحصيل — {fmt(r_tot_c)} ر.س')
+                st.dataframe(cd, use_container_width=True, height=380,
+                    column_config={
+                        'التاريخ'       : st.column_config.TextColumn('التاريخ',       width='small'),
+                        'العميل'        : st.column_config.TextColumn('العميل',        width='large'),
+                        'نوع التحصيل'   : st.column_config.TextColumn('نوع التحصيل',  width='small'),
+                        'المبلغ'        : st.column_config.TextColumn('المبلغ (ر.س)', width='medium'),
+                    })
+            else:
+                st.info('لا توجد تحصيلات لهذا المندوب في الفترة المختارة')
+
+        # ── تبويب 3: غير المحصّل (لكل عميل) ────────────────────
+        with t3:
+            cl_s = rep_s.groupby('client_name')['net'].sum().reset_index()
+            cl_s.columns = ['العميل', 'المبيعات']
+
+            if not rep_c.empty:
+                cl_c = rep_c.groupby('client_name')['net_amount'].sum().reset_index()
+                cl_c.columns = ['العميل', 'التحصيل']
+                outs = pd.merge(cl_s, cl_c, on='العميل', how='left').fillna(0)
+            else:
+                outs = cl_s.copy()
+                outs['التحصيل'] = 0.0
+
+            outs['المتبقي'] = (outs['المبيعات'] - outs['التحصيل']).clip(lower=0)
+            outs['النسبة']  = (outs['التحصيل'] / outs['المبيعات'] * 100).round(1)
+            outs = outs[outs['المتبقي'] > 0].sort_values('المتبقي', ascending=False).reset_index(drop=True)
+            outs.index = range(1, len(outs)+1)
+
+            if not outs.empty:
+                tot_uncoll = outs['المتبقي'].sum()
+                st.caption(f'⚠️ {len(outs)} عميل لم يُحصَّل منهم — إجمالي متبقي: {fmt(tot_uncoll)} ر.س')
+                outs['المبيعات']  = outs['المبيعات'].apply(lambda x: f'{x:,.0f}')
+                outs['التحصيل']   = outs['التحصيل'].apply(lambda x: f'{x:,.0f}')
+                outs['المتبقي']   = outs['المتبقي'].apply(lambda x: f'{x:,.0f}')
+                outs['النسبة']    = outs['النسبة'].apply(lambda x: f'{x:.1f}٪')
+                st.dataframe(outs, use_container_width=True, height=400,
+                    column_config={
+                        'العميل'   : st.column_config.TextColumn('العميل',           width='large'),
+                        'المبيعات' : st.column_config.TextColumn('المبيعات (ر.س)',   width='medium'),
+                        'التحصيل'  : st.column_config.TextColumn('تم تحصيله (ر.س)', width='medium'),
+                        'المتبقي'  : st.column_config.TextColumn('المتبقي (ر.س)',    width='medium'),
+                        'النسبة'   : st.column_config.TextColumn('نسبة التحصيل',    width='small'),
+                    })
+            else:
+                st.success(f'✅ ممتاز! تم تحصيل كل مبيعات {sel_rep} بالكامل')
+    else:
+        st.info('لا توجد بيانات مناديب للفترة المختارة')
+else:
+    st.info('ارفع ملف بيانات أولاً')
+
+# ══════════════════════════════════════════════════════════════
 # تفاصيل العملاء
 # ══════════════════════════════════════════════════════════════
 st.markdown(sec_hdr('تفاصيل العملاء', '🏢', '#4338CA'), unsafe_allow_html=True)
