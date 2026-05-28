@@ -13,7 +13,7 @@ from db import (init_db, save_data, get_available_months,
 
 # ══════════════════════════════════════════════════════════════
 st.set_page_config(
-    page_title="داشبورد اكسير ERP",
+    page_title="Dashboard 2026",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -581,7 +581,7 @@ init_db()
 # القائمة الجانبية
 # ══════════════════════════════════════════════════════════════
 with st.sidebar:
-    st.markdown("## 📊 اكسير ERP")
+    st.markdown("## 📊 Dashboard 2026")
     st.markdown(
         '<hr style="border-color:rgba(255,255,255,.15);margin:8px 0 16px">',
         unsafe_allow_html=True
@@ -693,7 +693,7 @@ rb = 'bg' if rate >= 65 else 'by' if rate >= 40 else 'br'
 # ══════════════════════════════════════════════════════════════
 st.markdown(f"""
 <div class="dash-hdr">
-  <div class="dash-hdr-title">📊 داشبورد اكسير ERP</div>
+  <div class="dash-hdr-title">📊 Dashboard 2026</div>
   <div class="dash-hdr-sub">لوحة تحكم المبيعات والتحصيلات</div>
   <div class="dash-pills">
     <span class="dash-pill">📅 {period_label}</span>
@@ -717,17 +717,17 @@ with c1:
     ), unsafe_allow_html=True)
 with c2:
     st.markdown(kpi_card(
-        'مبيعات أوفست', off_s, '🖨', '#0EA5E9',
+        'مبيعات الأوفست', off_s, '🖨', '#0EA5E9',
         f'{off_p:.1f}٪ من الإجمالي', badge='أوفست', btype='bc'
     ), unsafe_allow_html=True)
 with c3:
     st.markdown(kpi_card(
-        'مبيعات ديجيتال', dig_s, '📱', '#7C3AED',
+        'مبيعات الديجيتال', dig_s, '📱', '#7C3AED',
         f'{dig_p:.1f}٪ من الإجمالي', badge='ديجيتال', btype='bb'
     ), unsafe_allow_html=True)
 with c4:
     st.markdown(kpi_card(
-        'صافي التحصيل', tot_c, '✅', rc,
+        'التحصيل من إجمالي المبيعات', tot_c, '✅', rc,
         f'نسبة التحصيل {rate:.1f}٪', badge=rt, btype=rb
     ), unsafe_allow_html=True)
 
@@ -911,18 +911,23 @@ if not df_s.empty:
         # ── تبويب 1: حركات المبيعات ──────────────────────────────
         with t1:
             if not rep_s.empty:
-                sd = rep_s[['date','client_name','type','net']].copy()
-                sd.columns = ['التاريخ','العميل','النوع','المبلغ']
+                s_cols = ['date','client_name','type','net']
+                if 'invoice_no' in rep_s.columns: s_cols.insert(2, 'invoice_no')
+                sd = rep_s[s_cols].copy()
+                sd.columns = (['التاريخ','العميل','رقم الفاتورة','النوع','المبلغ']
+                               if 'invoice_no' in rep_s.columns
+                               else ['التاريخ','العميل','النوع','المبلغ'])
                 sd['المبلغ'] = sd['المبلغ'].apply(lambda x: f'{x:,.0f}')
                 sd = sd.sort_values('التاريخ', ascending=False).reset_index(drop=True)
                 sd.index = range(1, len(sd)+1)
                 st.caption(f'إجمالي {len(sd):,} حركة — {fmt(r_tot_s)} ر.س')
                 st.dataframe(sd, use_container_width=True, height=380,
                     column_config={
-                        'التاريخ' : st.column_config.TextColumn('التاريخ', width='small'),
-                        'العميل'  : st.column_config.TextColumn('العميل',  width='large'),
-                        'النوع'   : st.column_config.TextColumn('النوع',   width='small'),
-                        'المبلغ'  : st.column_config.TextColumn('المبلغ (ر.س)', width='medium'),
+                        'التاريخ'       : st.column_config.TextColumn('التاريخ',       width='small'),
+                        'العميل'        : st.column_config.TextColumn('العميل',        width='large'),
+                        'رقم الفاتورة'  : st.column_config.TextColumn('رقم الفاتورة', width='medium'),
+                        'النوع'         : st.column_config.TextColumn('النوع',         width='small'),
+                        'المبلغ'        : st.column_config.TextColumn('المبلغ (ر.س)', width='medium'),
                     })
             else:
                 st.info('لا توجد حركات مبيعات لهذا المندوب في الفترة المختارة')
@@ -930,8 +935,12 @@ if not df_s.empty:
         # ── تبويب 2: التحصيلات ───────────────────────────────────
         with t2:
             if not rep_c.empty:
-                cd = rep_c[['date','client_name','collection_type','net_amount']].copy()
-                cd.columns = ['التاريخ','العميل','نوع التحصيل','المبلغ']
+                c_cols = ['date','client_name','collection_type','net_amount']
+                if 'receipt_no' in rep_c.columns: c_cols.insert(2, 'receipt_no')
+                cd = rep_c[c_cols].copy()
+                cd.columns = (['التاريخ','العميل','رقم السند','نوع التحصيل','المبلغ']
+                               if 'receipt_no' in rep_c.columns
+                               else ['التاريخ','العميل','نوع التحصيل','المبلغ'])
                 cd['المبلغ'] = cd['المبلغ'].apply(lambda x: f'{x:,.0f}')
                 cd = cd.sort_values('التاريخ', ascending=False).reset_index(drop=True)
                 cd.index = range(1, len(cd)+1)
@@ -940,6 +949,7 @@ if not df_s.empty:
                     column_config={
                         'التاريخ'       : st.column_config.TextColumn('التاريخ',       width='small'),
                         'العميل'        : st.column_config.TextColumn('العميل',        width='large'),
+                        'رقم السند'     : st.column_config.TextColumn('رقم السند',     width='medium'),
                         'نوع التحصيل'   : st.column_config.TextColumn('نوع التحصيل',  width='small'),
                         'المبلغ'        : st.column_config.TextColumn('المبلغ (ر.س)', width='medium'),
                     })
@@ -1082,18 +1092,23 @@ if not df_s.empty:
         # تبويب 1: حركات المبيعات
         with ct1:
             if not cl_s.empty:
-                sd2 = cl_s[['date','type','net','rep_name']].copy()
-                sd2.columns = ['التاريخ','النوع','المبلغ','المندوب']
+                s2_cols = ['date','type','net','rep_name']
+                if 'invoice_no' in cl_s.columns: s2_cols.insert(1, 'invoice_no')
+                sd2 = cl_s[s2_cols].copy()
+                sd2.columns = (['التاريخ','رقم الفاتورة','النوع','المبلغ','المندوب']
+                                if 'invoice_no' in cl_s.columns
+                                else ['التاريخ','النوع','المبلغ','المندوب'])
                 sd2['المبلغ'] = sd2['المبلغ'].apply(lambda x: f'{x:,.0f}')
                 sd2 = sd2.sort_values('التاريخ', ascending=False).reset_index(drop=True)
                 sd2.index = range(1, len(sd2)+1)
                 st.caption(f'إجمالي {len(sd2):,} حركة — {fmt(c_tot_s)} ر.س')
                 st.dataframe(sd2, use_container_width=True, height=360,
                     column_config={
-                        'التاريخ' : st.column_config.TextColumn('التاريخ', width='small'),
-                        'النوع'   : st.column_config.TextColumn('النوع',   width='small'),
-                        'المبلغ'  : st.column_config.TextColumn('المبلغ (ر.س)', width='medium'),
-                        'المندوب' : st.column_config.TextColumn('المندوب', width='medium'),
+                        'التاريخ'      : st.column_config.TextColumn('التاريخ',       width='small'),
+                        'رقم الفاتورة' : st.column_config.TextColumn('رقم الفاتورة', width='medium'),
+                        'النوع'        : st.column_config.TextColumn('النوع',         width='small'),
+                        'المبلغ'       : st.column_config.TextColumn('المبلغ (ر.س)', width='medium'),
+                        'المندوب'      : st.column_config.TextColumn('المندوب',       width='medium'),
                     })
             else:
                 st.info('لا توجد حركات مبيعات لهذا العميل')
@@ -1101,18 +1116,23 @@ if not df_s.empty:
         # تبويب 2: التحصيلات
         with ct2:
             if not cl_c.empty:
-                cd2 = cl_c[['date','collection_type','net_amount','rep_name']].copy()
-                cd2.columns = ['التاريخ','نوع التحصيل','المبلغ','المندوب']
+                c2_cols = ['date','collection_type','net_amount','rep_name']
+                if 'receipt_no' in cl_c.columns: c2_cols.insert(1, 'receipt_no')
+                cd2 = cl_c[c2_cols].copy()
+                cd2.columns = (['التاريخ','رقم السند','نوع التحصيل','المبلغ','المندوب']
+                                if 'receipt_no' in cl_c.columns
+                                else ['التاريخ','نوع التحصيل','المبلغ','المندوب'])
                 cd2['المبلغ'] = cd2['المبلغ'].apply(lambda x: f'{x:,.0f}')
                 cd2 = cd2.sort_values('التاريخ', ascending=False).reset_index(drop=True)
                 cd2.index = range(1, len(cd2)+1)
                 st.caption(f'إجمالي {len(cd2):,} عملية — {fmt(c_tot_c)} ر.س  |  متبقي: {fmt(c_uncoll)} ر.س')
                 st.dataframe(cd2, use_container_width=True, height=360,
                     column_config={
-                        'التاريخ'     : st.column_config.TextColumn('التاريخ',       width='small'),
-                        'نوع التحصيل' : st.column_config.TextColumn('نوع التحصيل',  width='small'),
-                        'المبلغ'      : st.column_config.TextColumn('المبلغ (ر.س)', width='medium'),
-                        'المندوب'     : st.column_config.TextColumn('المندوب',       width='medium'),
+                        'التاريخ'      : st.column_config.TextColumn('التاريخ',       width='small'),
+                        'رقم السند'    : st.column_config.TextColumn('رقم السند',     width='medium'),
+                        'نوع التحصيل'  : st.column_config.TextColumn('نوع التحصيل',  width='small'),
+                        'المبلغ'       : st.column_config.TextColumn('المبلغ (ر.س)', width='medium'),
+                        'المندوب'      : st.column_config.TextColumn('المندوب',       width='medium'),
                     })
                 if c_uncoll > 0:
                     st.warning(f'⚠️ متبقي غير محصّل: **{fmt(c_uncoll)} ر.س**')

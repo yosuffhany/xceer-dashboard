@@ -44,6 +44,22 @@ def _make_engine():
 engine = _make_engine()
 IS_PG  = engine.dialect.name == "postgresql"
 
+def _add_column_safe(table, column, col_def):
+    """يضيف عمود للجدول بأمان — يتجاهل لو موجود أصلاً"""
+    with engine.connect() as conn:
+        try:
+            if IS_PG:
+                conn.execute(text(
+                    f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {col_def}"
+                ))
+            else:
+                conn.execute(text(
+                    f"ALTER TABLE {table} ADD COLUMN {column} {col_def}"
+                ))
+            conn.commit()
+        except Exception:
+            pass  # العمود موجود أصلاً
+
 # ══════════════════════════════════════════════════════════════
 # إنشاء الجداول
 # ══════════════════════════════════════════════════════════════
@@ -87,7 +103,8 @@ def init_db():
             net         REAL,
             tax         REAL,
             total       REAL,
-            type        TEXT
+            type        TEXT,
+            invoice_no  TEXT DEFAULT ''
         )""",
         f"""CREATE TABLE IF NOT EXISTS collections (
             id               {pk},
@@ -99,7 +116,8 @@ def init_db():
             rep_name         TEXT,
             amount           REAL,
             net_amount       REAL,
-            collection_type  TEXT
+            collection_type  TEXT,
+            receipt_no       TEXT DEFAULT ''
         )""",
         f"""CREATE TABLE IF NOT EXISTS work_orders (
             id          {pk},
@@ -120,6 +138,10 @@ def init_db():
         for stmt in ddl:
             conn.execute(text(stmt))
         conn.commit()
+
+    # ── Migration: إضافة الأعمدة الجديدة للجداول القديمة ──────
+    _add_column_safe("sales",       "invoice_no", "TEXT DEFAULT ''")
+    _add_column_safe("collections", "receipt_no", "TEXT DEFAULT ''")
 
 # ══════════════════════════════════════════════════════════════
 # حفظ البيانات

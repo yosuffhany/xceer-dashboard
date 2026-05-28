@@ -16,11 +16,13 @@ COL_TOTAL         = 'الاجمالي'
 COL_DATE          = 'تاريخ المستند'
 COL_CLIENT        = 'اسم العميل'
 COL_CLIENT_NO     = 'رقم العميل'
+COL_INVOICE_NO    = 'رقم المستند'   # رقم الفاتورة
 
 COLLECT_HEADER_ROW = 4  # الهيدر في الصف 5 (index 4)
 COL_AMOUNT        = 'المبلغ'
 COL_C_CLIENT      = 'اسم  الجهة'
 COL_C_CLIENT_NO   = 'رقم  الجهة'
+COL_RECEIPT_NO    = 'رقم السند'     # رقم سند القبض
 
 WO_HEADER_ROW     = 0
 COL_WO_CLIENT     = 'العميل'
@@ -90,6 +92,11 @@ def parse_sales(xl, sheet_name, sale_type):
         if not client or net == 0 or d is None:
             continue
 
+        # رقم الفاتورة — يجرب عدة أسماء محتملة
+        inv_no = safe_str(row.get(COL_INVOICE_NO,
+                 row.get('رقم الفاتورة',
+                 row.get('رقم المستند', ''))))
+
         records.append({
             'date'      : d.strftime('%Y-%m-%d'),
             'month'     : get_month(d),
@@ -99,7 +106,8 @@ def parse_sales(xl, sheet_name, sale_type):
             'tax'       : round(safe_float(row.get(COL_TAX, 0)), 2),
             'total'     : round(safe_float(row.get(COL_TOTAL, 0)), 2),
             'type'      : sale_type,
-            'rep_name'  : ''   # يُضاف لاحقاً من rep_map
+            'rep_name'  : '',      # يُضاف لاحقاً من rep_map
+            'invoice_no': inv_no,
         })
     return records
 
@@ -120,6 +128,12 @@ def parse_collections(xl, sheet_name, col_type):
         if not client or amount == 0 or d is None:
             continue
 
+        # رقم السند — يجرب عدة أسماء محتملة
+        rcpt_no = safe_str(row.get(COL_RECEIPT_NO,
+                  row.get('رقم سند القبض',
+                  row.get('رقم الايصال',
+                  row.get('رقم القبض', '')))))
+
         records.append({
             'date'           : d.strftime('%Y-%m-%d'),
             'month'          : get_month(d),
@@ -128,7 +142,8 @@ def parse_collections(xl, sheet_name, col_type):
             'amount'         : round(amount, 2),
             'net_amount'     : round(amount / TAX_RATE, 2),
             'collection_type': col_type,
-            'rep_name'       : ''
+            'rep_name'       : '',
+            'receipt_no'     : rcpt_no,
         })
     return records
 
