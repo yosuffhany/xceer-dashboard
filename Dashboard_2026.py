@@ -56,13 +56,6 @@ section[data-testid="stSidebar"] [data-testid="stExpanderToggleIcon"] {
   display: none !important;
 }
 
-/* ── زرار السايدبار في الهيدر ── */
-header[data-testid="stHeader"] button[kind="header"] {
-  background: rgba(67,56,202,.12) !important;
-  border-radius: 8px !important;
-  color: #4338CA !important;
-}
-header[data-testid="stHeader"] button[kind="header"] svg { fill: #4338CA !important }
 
 .stApp {
   background: linear-gradient(135deg,#EEF2FF 0%,#F0F9FF 50%,#F5F3FF 100%) !important;
@@ -78,9 +71,6 @@ header[data-testid="stHeader"] button[kind="header"] svg { fill: #4338CA !import
 #MainMenu { visibility: hidden }
 footer { visibility: hidden }
 .stDeployButton { display: none }
-/* نخفي محتوى الهيدر بس نخلي زرار السايدبار شغال */
-header[data-testid="stHeader"] { background: transparent !important; box-shadow: none !important }
-[data-testid="stToolbar"] { visibility: hidden }
 [data-testid="stDecoration"] { display: none }
 
 /* منطقة رفع الملف */
