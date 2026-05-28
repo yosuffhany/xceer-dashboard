@@ -13,7 +13,7 @@ from db import (init_db, save_data, get_available_months,
 
 # ══════════════════════════════════════════════════════════════
 st.set_page_config(
-    page_title="Dashboard 2026",
+    page_title="Sales Analysis",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -585,7 +585,7 @@ init_db()
 # القائمة الجانبية
 # ══════════════════════════════════════════════════════════════
 with st.sidebar:
-    st.markdown("## 📊 Dashboard 2026")
+    st.markdown("## 📊 Sales Analysis")
     st.markdown('<hr style="border-color:rgba(255,255,255,.15);margin:8px 0 14px">', unsafe_allow_html=True)
 
     # ══ الفلاتر أولاً ══════════════════════════════════════════
@@ -693,7 +693,7 @@ rb = 'bg' if rate >= 65 else 'by' if rate >= 40 else 'br'
 # ══════════════════════════════════════════════════════════════
 st.markdown(f"""
 <div class="dash-hdr">
-  <div class="dash-hdr-title">📊 Dashboard 2026</div>
+  <div class="dash-hdr-title">📊 Sales Analysis</div>
   <div class="dash-hdr-sub">لوحة تحكم المبيعات والتحصيلات</div>
   <div class="dash-pills">
     <span class="dash-pill">📅 {period_label}</span>
