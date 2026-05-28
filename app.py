@@ -828,10 +828,14 @@ if not reps.empty:
         for col in ['أوفست','ديجيتال','الإجمالي','التحصيل','متوسط مبيعات','متوسط تحصيل']:
             disp[col] = disp[col].apply(lambda x: f'{x:,.0f}')
         disp['النسبة ٪'] = disp['النسبة ٪'].apply(lambda x: f'{x:.1f}٪')
-        st.dataframe(
+
+        st.caption('👆 انقر على أي صف أو رقم لعرض تفاصيل المندوب تلقائياً أدناه')
+        tbl_event = st.dataframe(
             disp,
             use_container_width=True,
             height=420,
+            on_select='rerun',
+            selection_mode='single-row',
             column_config={
                 'المندوب'      : st.column_config.TextColumn('المندوب',      width='medium'),
                 'أوفست'        : st.column_config.TextColumn('أوفست (ر.س)', width='medium'),
@@ -843,6 +847,11 @@ if not reps.empty:
                 'متوسط تحصيل'  : st.column_config.TextColumn('متوسط تحصيل', width='medium'),
             }
         )
+        # لما المستخدم يضغط على صف → يحفظ اسم المندوب في session_state
+        if tbl_event.selection.rows:
+            clicked_name = disp.iloc[tbl_event.selection.rows[0]]['المندوب']
+            st.session_state['selected_rep'] = clicked_name
+            st.info(f'🔍 تم اختيار **{clicked_name}** — انتقل لقسم الاستعراض أدناه')
 else:
     st.info("لا توجد بيانات مناديب للفترة المختارة")
 
@@ -854,7 +863,18 @@ st.markdown(sec_hdr('استعراض مندوب بالتفصيل', '🔍', '#7C3A
 if not df_s.empty:
     rep_list = sorted([r for r in df_s['rep_name'].unique() if r and r != 'غير محدد'])
     if rep_list:
-        sel_rep = st.selectbox('👤 اختر المندوب:', rep_list, key='rep_detail')
+        # لو المستخدم ضغط على صف في الجدول فوق → يحدد نفس المندوب تلقائياً
+        default_idx = 0
+        saved = st.session_state.get('selected_rep', '')
+        if saved in rep_list:
+            default_idx = rep_list.index(saved)
+
+        sel_rep = st.selectbox(
+            '👤 اختر المندوب (أو اضغط على صف في الجدول أعلاه):',
+            rep_list, index=default_idx, key='rep_detail'
+        )
+        # حفّظ الاختيار اليدوي كمان
+        st.session_state['selected_rep'] = sel_rep
 
         rep_s = df_s[df_s['rep_name'] == sel_rep].copy()
         rep_c = df_c[df_c['rep_name'] == sel_rep].copy() if not df_c.empty else pd.DataFrame()
