@@ -847,11 +847,11 @@ if not reps.empty:
                 'متوسط تحصيل'  : st.column_config.TextColumn('متوسط تحصيل', width='medium'),
             }
         )
-        # لما المستخدم يضغط على صف → يحفظ اسم المندوب في session_state
+        # لما المستخدم يضغط على صف → اكتب مباشرةً على مفتاح الـ selectbox
         if tbl_event.selection.rows:
             clicked_name = disp.iloc[tbl_event.selection.rows[0]]['المندوب']
-            st.session_state['selected_rep'] = clicked_name
-            st.info(f'🔍 تم اختيار **{clicked_name}** — انتقل لقسم الاستعراض أدناه')
+            st.session_state['rep_detail'] = clicked_name   # ← نفس key الـ selectbox
+            st.info(f'🔍 تم اختيار **{clicked_name}** — انتقل لأسفل لرؤية التفاصيل ↓')
 else:
     st.info("لا توجد بيانات مناديب للفترة المختارة")
 
@@ -863,18 +863,10 @@ st.markdown(sec_hdr('استعراض مندوب بالتفصيل', '🔍', '#7C3A
 if not df_s.empty:
     rep_list = sorted([r for r in df_s['rep_name'].unique() if r and r != 'غير محدد'])
     if rep_list:
-        # لو المستخدم ضغط على صف في الجدول فوق → يحدد نفس المندوب تلقائياً
-        default_idx = 0
-        saved = st.session_state.get('selected_rep', '')
-        if saved in rep_list:
-            default_idx = rep_list.index(saved)
-
         sel_rep = st.selectbox(
-            '👤 اختر المندوب (أو اضغط على صف في الجدول أعلاه):',
-            rep_list, index=default_idx, key='rep_detail'
+            '👤 اختر المندوب (أو اضغط على أي صف في الجدول أعلاه):',
+            rep_list, key='rep_detail'
         )
-        # حفّظ الاختيار اليدوي كمان
-        st.session_state['selected_rep'] = sel_rep
 
         rep_s = df_s[df_s['rep_name'] == sel_rep].copy()
         rep_c = df_c[df_c['rep_name'] == sel_rep].copy() if not df_c.empty else pd.DataFrame()
