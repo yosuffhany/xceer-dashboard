@@ -52,6 +52,21 @@ def init_db():
     pk = "SERIAL PRIMARY KEY" if IS_PG else "INTEGER PRIMARY KEY AUTOINCREMENT"
 
     ddl = [
+        # ── جدول العروض ──────────────────────────────────────────
+        f"""CREATE TABLE IF NOT EXISTS quotes (
+            id           {pk},
+            uploaded_at  TEXT,
+            quote_no     TEXT,
+            order_no     TEXT,
+            client       TEXT,
+            rep          TEXT,
+            total        REAL,
+            date         TEXT,
+            q_type       TEXT,
+            is_executed  INTEGER DEFAULT 0
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_quotes_type ON quotes(q_type)",
+    ] + [
         f"""CREATE TABLE IF NOT EXISTS uploads (
             id            {pk},
             filename      TEXT,
@@ -222,3 +237,47 @@ def delete_month(month):
         conn.execute(text("DELETE FROM collections WHERE month = :m"), {"m": month})
         conn.execute(text("DELETE FROM work_orders WHERE month = :m"), {"m": month})
         conn.commit()
+
+# ══════════════════════════════════════════════════════════════
+# العروض
+# ══════════════════════════════════════════════════════════════
+
+def save_quotes(records, q_type):
+    """حفظ عروض نوع معين — يحذف القديم أولاً"""
+    if not records:
+        return 0
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    df  = pd.DataFrame(records)
+    df['uploaded_at'] = now
+    with engine.connect() as conn:
+        conn.execute(text("DELETE FROM quotes WHERE q_type = :qt"), {"qt": q_type})
+        conn.commit()
+    df.to_sql("quotes", engine, if_exists="append", index=False,
+              method="multi", chunksize=500)
+    return len(df)
+
+def get_quotes(q_type=None):
+    with engine.connect() as conn:
+        try:
+            if q_type:
+                return pd.read_sql_query(
+                    text("SELECT * FROM quotes WHERE q_type = :qt ORDER BY date"),
+                    conn, params={"qt": q_type}
+                )
+            return pd.read_sql_query(
+                text("SELECT * FROM quotes ORDER BY q_type, date"),
+                conn
+            )
+        except Exception:
+            return pd.DataFrame()
+
+def get_all_sales_clients():
+    """كل أسماء العملاء اللي عندهم مبيعات — لتحديد المفوتر"""
+    with engine.connect() as conn:
+        try:
+            rows = conn.execute(
+                text("SELECT DISTINCT client_name FROM sales")
+            ).fetchall()
+            return {r[0] for r in rows}
+        except Exception:
+            return set()
