@@ -586,10 +586,45 @@ init_db()
 # ══════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown("## 📊 Dashboard 2026")
-    st.markdown(
-        '<hr style="border-color:rgba(255,255,255,.15);margin:8px 0 16px">',
-        unsafe_allow_html=True
-    )
+    st.markdown('<hr style="border-color:rgba(255,255,255,.15);margin:8px 0 14px">', unsafe_allow_html=True)
+
+    # ══ الفلاتر أولاً ══════════════════════════════════════════
+    available = get_available_months()
+    if available:
+        st.markdown("### 🗓 فلتر الفترة")
+        from_m = st.selectbox("من شهر:", available, index=0,
+                               format_func=month_label)
+        to_m   = st.selectbox("إلى شهر:", available,
+                               index=len(available)-1, format_func=month_label)
+        period_label = f"من {month_label(from_m)} إلى {month_label(to_m)}"
+    else:
+        from_m = to_m = None
+        period_label  = "لا توجد بيانات"
+
+    st.markdown('<hr style="border-color:rgba(255,255,255,.15);margin:14px 0 10px">', unsafe_allow_html=True)
+
+    # ══ الإدارة ════════════════════════════════════════════════
+    with st.expander("📋 سجل الرفع"):
+        hist = get_uploads_history()
+        if not hist.empty:
+            for _, row in hist.iterrows():
+                st.markdown(f"**📄 {row['filename']}**")
+                st.caption(f"🕐 {row['uploaded_at'][:16]}")
+                st.markdown("---")
+        else:
+            st.info("لا يوجد سجل حتى الآن")
+
+    with st.expander("🗑 حذف بيانات شهر"):
+        if available:
+            del_m = st.selectbox("اختر الشهر:", available,
+                                  format_func=month_label, key='del')
+            if st.button("🗑 حذف هذا الشهر", type="secondary"):
+                delete_month(del_m)
+                st.success(f"✅ تم حذف {month_label(del_m)}")
+                st.rerun()
+
+    # ══ رفع الملف في الأسفل ════════════════════════════════════
+    st.markdown('<hr style="border-color:rgba(255,255,255,.15);margin:14px 0 10px">', unsafe_allow_html=True)
     st.markdown("### 📁 رفع ملف شهري")
     uploaded = st.file_uploader(
         "اختر ملف Excel من اكسير",
@@ -612,45 +647,6 @@ with st.sidebar:
                 st.rerun()
             except Exception as e:
                 st.error(f"❌ خطأ في معالجة الملف:\n{str(e)}")
-
-    st.markdown(
-        '<hr style="border-color:rgba(255,255,255,.15);margin:16px 0">',
-        unsafe_allow_html=True
-    )
-    available = get_available_months()
-    if available:
-        st.markdown("### 🗓 فلتر الفترة")
-        from_m = st.selectbox("من شهر:", available, index=0,
-                               format_func=month_label)
-        to_m   = st.selectbox("إلى شهر:", available,
-                               index=len(available)-1, format_func=month_label)
-        period_label = f"من {month_label(from_m)} إلى {month_label(to_m)}"
-    else:
-        from_m = to_m = None
-        period_label  = "لا توجد بيانات"
-
-    st.markdown(
-        '<hr style="border-color:rgba(255,255,255,.15);margin:16px 0">',
-        unsafe_allow_html=True
-    )
-    with st.expander("📋 سجل الرفع"):
-        hist = get_uploads_history()
-        if not hist.empty:
-            for _, row in hist.iterrows():
-                st.markdown(f"**📄 {row['filename']}**")
-                st.caption(f"🕐 {row['uploaded_at'][:16]}")
-                st.markdown("---")
-        else:
-            st.info("لا يوجد سجل حتى الآن")
-
-    with st.expander("🗑 حذف بيانات شهر"):
-        if available:
-            del_m = st.selectbox("اختر الشهر:", available,
-                                  format_func=month_label, key='del')
-            if st.button("🗑 حذف هذا الشهر", type="secondary"):
-                delete_month(del_m)
-                st.success(f"✅ تم حذف {month_label(del_m)}")
-                st.rerun()
 
 # ══════════════════════════════════════════════════════════════
 # الشاشة الفارغة
