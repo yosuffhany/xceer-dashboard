@@ -55,6 +55,19 @@ label, button, input, select, textarea,
 section[data-testid="stSidebar"] [data-testid="stExpanderToggleIcon"] {
   display: none !important;
 }
+
+/* ── زر إعادة فتح الشريط الجانبي ── */
+[data-testid="collapsedControl"] {
+  background: linear-gradient(180deg,#312E81,#4338CA) !important;
+  border-radius: 0 10px 10px 0 !important;
+  box-shadow: 3px 0 16px rgba(67,56,202,.55) !important;
+  opacity: 1 !important; visibility: visible !important;
+  min-width: 28px !important;
+}
+[data-testid="collapsedControl"] svg,
+[data-testid="collapsedControl"] button,
+[data-testid="collapsedControl"] span { color:#fff !important; fill:#fff !important }
+
 .stApp {
   background: linear-gradient(135deg,#EEF2FF 0%,#F0F9FF 50%,#F5F3FF 100%) !important;
   min-height: 100vh;
@@ -912,10 +925,11 @@ if not df_s.empty:
         with t1:
             if not rep_s.empty:
                 s_cols = ['date','client_name','type','net']
-                if 'invoice_no' in rep_s.columns: s_cols.insert(2, 'invoice_no')
+                _has_inv = 'invoice_no' in rep_s.columns and rep_s['invoice_no'].astype(str).str.strip().ne('').any()
+                if _has_inv: s_cols.insert(2, 'invoice_no')
                 sd = rep_s[s_cols].copy()
                 sd.columns = (['التاريخ','العميل','رقم الفاتورة','النوع','المبلغ']
-                               if 'invoice_no' in rep_s.columns
+                               if _has_inv
                                else ['التاريخ','العميل','النوع','المبلغ'])
                 sd['المبلغ'] = sd['المبلغ'].apply(lambda x: f'{x:,.0f}')
                 sd = sd.sort_values('التاريخ', ascending=False).reset_index(drop=True)
@@ -936,10 +950,11 @@ if not df_s.empty:
         with t2:
             if not rep_c.empty:
                 c_cols = ['date','client_name','collection_type','net_amount']
-                if 'receipt_no' in rep_c.columns: c_cols.insert(2, 'receipt_no')
+                _has_rcpt = 'receipt_no' in rep_c.columns and rep_c['receipt_no'].astype(str).str.strip().ne('').any()
+                if _has_rcpt: c_cols.insert(2, 'receipt_no')
                 cd = rep_c[c_cols].copy()
                 cd.columns = (['التاريخ','العميل','رقم السند','نوع التحصيل','المبلغ']
-                               if 'receipt_no' in rep_c.columns
+                               if _has_rcpt
                                else ['التاريخ','العميل','نوع التحصيل','المبلغ'])
                 cd['المبلغ'] = cd['المبلغ'].apply(lambda x: f'{x:,.0f}')
                 cd = cd.sort_values('التاريخ', ascending=False).reset_index(drop=True)
@@ -1093,10 +1108,11 @@ if not df_s.empty:
         with ct1:
             if not cl_s.empty:
                 s2_cols = ['date','type','net','rep_name']
-                if 'invoice_no' in cl_s.columns: s2_cols.insert(1, 'invoice_no')
+                _has_inv2 = 'invoice_no' in cl_s.columns and cl_s['invoice_no'].astype(str).str.strip().ne('').any()
+                if _has_inv2: s2_cols.insert(1, 'invoice_no')
                 sd2 = cl_s[s2_cols].copy()
                 sd2.columns = (['التاريخ','رقم الفاتورة','النوع','المبلغ','المندوب']
-                                if 'invoice_no' in cl_s.columns
+                                if _has_inv2
                                 else ['التاريخ','النوع','المبلغ','المندوب'])
                 sd2['المبلغ'] = sd2['المبلغ'].apply(lambda x: f'{x:,.0f}')
                 sd2 = sd2.sort_values('التاريخ', ascending=False).reset_index(drop=True)
@@ -1117,10 +1133,11 @@ if not df_s.empty:
         with ct2:
             if not cl_c.empty:
                 c2_cols = ['date','collection_type','net_amount','rep_name']
-                if 'receipt_no' in cl_c.columns: c2_cols.insert(1, 'receipt_no')
+                _has_rcpt2 = 'receipt_no' in cl_c.columns and cl_c['receipt_no'].astype(str).str.strip().ne('').any()
+                if _has_rcpt2: c2_cols.insert(1, 'receipt_no')
                 cd2 = cl_c[c2_cols].copy()
                 cd2.columns = (['التاريخ','رقم السند','نوع التحصيل','المبلغ','المندوب']
-                                if 'receipt_no' in cl_c.columns
+                                if _has_rcpt2
                                 else ['التاريخ','نوع التحصيل','المبلغ','المندوب'])
                 cd2['المبلغ'] = cd2['المبلغ'].apply(lambda x: f'{x:,.0f}')
                 cd2 = cd2.sort_values('التاريخ', ascending=False).reset_index(drop=True)

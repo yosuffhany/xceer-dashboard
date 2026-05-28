@@ -35,6 +35,18 @@ body,p,h1,h2,h3,h4,h5,h6,label,button,input,select,textarea,
 }
 [data-testid="stExpanderToggleIcon"] { display:none !important }
 
+/* ── زر إعادة فتح الشريط الجانبي ── */
+[data-testid="collapsedControl"] {
+  background: linear-gradient(180deg,#312E81,#4338CA) !important;
+  border-radius: 0 10px 10px 0 !important;
+  box-shadow: 3px 0 16px rgba(67,56,202,.55) !important;
+  opacity: 1 !important; visibility: visible !important;
+  min-width: 28px !important;
+}
+[data-testid="collapsedControl"] svg,
+[data-testid="collapsedControl"] button,
+[data-testid="collapsedControl"] span { color:#fff !important; fill:#fff !important }
+
 .stApp {
   background:linear-gradient(135deg,#EEF2FF 0%,#F0F9FF 50%,#F5F3FF 100%) !important;
   min-height:100vh;
@@ -269,9 +281,52 @@ init_db()
 # ══════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown("## 📑 تحليل العروض")
-    st.markdown('<hr style="border-color:rgba(255,255,255,.15);margin:8px 0 16px">', unsafe_allow_html=True)
+    st.markdown('<hr style="border-color:rgba(255,255,255,.15);margin:8px 0 14px">', unsafe_allow_html=True)
 
-    st.markdown("### 🖨 عروض أوفست")
+    # ══ الفلاتر أولاً ══════════════════════════════════════════
+    st.markdown("### 🔍 الفلاتر")
+
+    # فلتر النوع
+    type_filter = st.selectbox('القسم:', ['الكل', 'اوفست فقط', 'ديجيتال فقط'], key='qt_filter')
+
+    # فلتر الحالة
+    status_filter = st.selectbox('الحالة:', ['الكل', 'غير منفذة', 'منفذة', 'منفذة - مفوترة', 'منفذة - غير مفوترة'],
+                                  key='qs_filter')
+
+    # فلتر الشهر + العميل + المندوب — نجلب الخيارات من DB
+    _df_opts = get_quotes()
+    if not _df_opts.empty:
+        # شهور متاحة (YYYY-MM)
+        _df_opts['_m'] = _df_opts['date'].astype(str).str[:7]
+        _all_months  = sorted([m for m in _df_opts['_m'].dropna().unique() if len(m) == 7], reverse=True)
+        _all_clients = sorted(_df_opts['client'].dropna().unique().tolist())
+        _all_reps    = sorted([r for r in _df_opts['rep'].dropna().unique().tolist() if r and r != 'غير محدد'])
+
+        month_ms  = st.multiselect('📅 الشهر:', _all_months,  key='q_month_ms',
+                                    placeholder='كل الشهور...')
+        client_ms = st.multiselect('🏢 العميل:', _all_clients, key='q_client_ms',
+                                    placeholder='كل العملاء...')
+        rep_ms    = st.multiselect('👤 المندوب:', _all_reps,   key='q_rep_ms',
+                                    placeholder='كل المناديب...')
+    else:
+        month_ms = client_ms = rep_ms = []
+
+    st.markdown('<hr style="border-color:rgba(255,255,255,.15);margin:14px 0 10px">', unsafe_allow_html=True)
+
+    # حذف العروض
+    with st.expander('🗑 إدارة البيانات'):
+        del_type = st.selectbox('النوع:', ['الكل', 'اوفست فقط', 'ديجيتال فقط'], key='q_del_type')
+        if st.button('🗑 مسح العروض المختارة', type='secondary', key='q_del_btn'):
+            qt = None if del_type == 'الكل' else del_type.replace(' فقط', '')
+            delete_quotes(qt)
+            st.success('✅ تم الحذف بنجاح')
+            st.rerun()
+
+    # ══ رفع الملفات (في الأسفل) ════════════════════════════════
+    st.markdown('<hr style="border-color:rgba(255,255,255,.15);margin:14px 0 10px">', unsafe_allow_html=True)
+    st.markdown("### 📂 رفع الملفات")
+
+    st.markdown("**🖨 عروض أوفست**")
     off_file = st.file_uploader("ملف عروض أوفست", type=['xlsx', 'xls'], key='q_off',
                                  help="ملف العروض الخاص بقسم الأوفست")
     if off_file:
@@ -284,9 +339,8 @@ with st.sidebar:
             except Exception as e:
                 st.error(f'❌ خطأ: {e}')
 
-    st.markdown('<hr style="border-color:rgba(255,255,255,.15);margin:12px 0">', unsafe_allow_html=True)
-
-    st.markdown("### 📱 عروض ديجيتال")
+    st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
+    st.markdown("**📱 عروض ديجيتال**")
     dig_file = st.file_uploader("ملف عروض ديجيتال", type=['xlsx', 'xls'], key='q_dig',
                                  help="ملف العروض الخاص بقسم الديجيتال")
     if dig_file:
@@ -298,41 +352,6 @@ with st.sidebar:
                 st.rerun()
             except Exception as e:
                 st.error(f'❌ خطأ: {e}')
-
-    st.markdown('<hr style="border-color:rgba(255,255,255,.15);margin:12px 0">', unsafe_allow_html=True)
-
-    # فلتر النوع
-    type_filter = st.selectbox('🔍 عرض:', ['الكل', 'اوفست فقط', 'ديجيتال فقط'], key='qt_filter')
-
-    # فلتر الحالة
-    status_filter = st.selectbox('📊 الحالة:', ['الكل', 'غير منفذة', 'منفذة', 'منفذة - مفوترة', 'منفذة - غير مفوترة'],
-                                  key='qs_filter')
-
-    st.markdown('<hr style="border-color:rgba(255,255,255,.15);margin:12px 0">', unsafe_allow_html=True)
-
-    # فلتر العميل والمندوب — نجلب الخيارات من DB مباشرة
-    _df_opts = get_quotes()
-    if not _df_opts.empty:
-        _all_clients = sorted(_df_opts['client'].dropna().unique().tolist())
-        _all_reps    = sorted([r for r in _df_opts['rep'].dropna().unique().tolist() if r and r != 'غير محدد'])
-        client_ms = st.multiselect('🏢 تصفية بالعميل:', _all_clients, key='q_client_ms',
-                                    placeholder='اختر عميل أو أكثر...')
-        rep_ms = st.multiselect('👤 تصفية بالمندوب:', _all_reps, key='q_rep_ms',
-                                 placeholder='اختر مندوب أو أكثر...')
-    else:
-        client_ms = []
-        rep_ms    = []
-
-    st.markdown('<hr style="border-color:rgba(255,255,255,.15);margin:16px 0 8px">', unsafe_allow_html=True)
-
-    # حذف العروض
-    with st.expander('🗑 إدارة البيانات'):
-        del_type = st.selectbox('النوع:', ['الكل', 'اوفست فقط', 'ديجيتال فقط'], key='q_del_type')
-        if st.button('🗑 مسح العروض المختارة', type='secondary', key='q_del_btn'):
-            qt = None if del_type == 'الكل' else del_type.replace(' فقط', '')
-            delete_quotes(qt)
-            st.success('✅ تم الحذف بنجاح')
-            st.rerun()
 
 # ══════════════════════════════════════════════════════════════
 # تحميل البيانات
@@ -377,9 +396,12 @@ elif status_filter == 'منفذة - مفوترة':
 elif status_filter == 'منفذة - غير مفوترة':
     df_q = df_q[(df_q['is_executed'] == 1) & (df_q['is_invoiced'] == 0)]
 
-# تطبيق فلتر العميل والمندوب
+# تطبيق فلتر الشهر / العميل / المندوب
+month_ms  = st.session_state.get('q_month_ms',  [])
 client_ms = st.session_state.get('q_client_ms', [])
-rep_ms    = st.session_state.get('q_rep_ms', [])
+rep_ms    = st.session_state.get('q_rep_ms',    [])
+if month_ms:
+    df_q = df_q[df_q['date'].astype(str).str[:7].isin(month_ms)]
 if client_ms:
     df_q = df_q[df_q['client'].isin(client_ms)]
 if rep_ms:
@@ -397,6 +419,8 @@ if type_filter == 'اوفست فقط':
     df_all = df_all[df_all['q_type'] == 'اوفست']
 elif type_filter == 'ديجيتال فقط':
     df_all = df_all[df_all['q_type'] == 'ديجيتال']
+if month_ms:
+    df_all = df_all[df_all['date'].astype(str).str[:7].isin(month_ms)]
 if client_ms:
     df_all = df_all[df_all['client'].isin(client_ms)]
 if rep_ms:
