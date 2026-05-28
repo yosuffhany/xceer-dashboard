@@ -1003,10 +1003,13 @@ if not df_s.empty:
     clients.columns = ['اسم العميل', 'المبيعات (ر.س)', 'الحركات', 'المندوب']
     clients['المبيعات (ر.س)'] = clients['المبيعات (ر.س)'].apply(lambda x: f'{x:,.0f}')
     clients['الحركات']         = clients['الحركات'].apply(lambda x: f'{int(x):,}')
-    st.dataframe(
+    st.caption('👆 انقر على أي صف لعرض تفاصيل العميل أدناه')
+    cl_event = st.dataframe(
         clients,
         use_container_width=True,
         height=400,
+        on_select='rerun',
+        selection_mode='single-row',
         column_config={
             'اسم العميل'     : st.column_config.TextColumn('اسم العميل',     width='large'),
             'المبيعات (ر.س)': st.column_config.TextColumn('المبيعات (ر.س)',width='medium'),
@@ -1014,8 +1017,109 @@ if not df_s.empty:
             'المندوب'        : st.column_config.TextColumn('المندوب',        width='medium'),
         }
     )
+    if cl_event.selection.rows:
+        clicked_client = clients.iloc[cl_event.selection.rows[0]]['اسم العميل']
+        st.session_state['client_detail'] = clicked_client
+        st.info(f'🔍 تم اختيار **{clicked_client}** — انتقل لأسفل لرؤية التفاصيل ↓')
 else:
     st.info("لا توجد بيانات عملاء للفترة المختارة")
+
+# ══════════════════════════════════════════════════════════════
+# استعراض عميل — تفصيلي
+# ══════════════════════════════════════════════════════════════
+st.markdown(sec_hdr('استعراض عميل بالتفصيل', '🏢', '#4338CA'), unsafe_allow_html=True)
+
+if not df_s.empty:
+    client_list = (df_s.groupby('client_name')['net'].sum()
+                   .sort_values(ascending=False).index.tolist())
+    if client_list:
+        sel_client = st.selectbox(
+            '🏢 اختر العميل (أو اضغط على أي صف في الجدول أعلاه):',
+            client_list, key='client_detail'
+        )
+
+        cl_s = df_s[df_s['client_name'] == sel_client].copy()
+        cl_c = df_c[df_c['client_name'] == sel_client].copy() if not df_c.empty else pd.DataFrame()
+
+        c_tot_s  = cl_s['net'].sum()
+        c_tot_c  = cl_c['net_amount'].sum() if not cl_c.empty else 0.0
+        c_uncoll = max(c_tot_s - c_tot_c, 0)
+        c_rate   = (c_tot_c / c_tot_s * 100) if c_tot_s > 0 else 0.0
+        c_color  = '#10B981' if c_rate >= 65 else '#F59E0B' if c_rate >= 40 else '#EF4444'
+        c_rep    = cl_s['rep_name'].mode()[0] if not cl_s.empty else '—'
+
+        # بطاقات ملخص العميل
+        ca, cb, cc, cd = st.columns(4)
+        with ca:
+            st.markdown(kpi_card(
+                'إجمالي المبيعات', c_tot_s, '💰', '#4338CA',
+                f'المندوب: {c_rep}', badge=f'{len(cl_s):,} حركة', btype='bb'
+            ), unsafe_allow_html=True)
+        with cb:
+            st.markdown(kpi_card(
+                'صافي التحصيل', c_tot_c, '✅', c_color,
+                f'نسبة {c_rate:.1f}٪',
+                badge='✅ ممتاز' if c_rate >= 65 else '⚠️ متوسط' if c_rate >= 40 else '❌ ضعيف',
+                btype='bg' if c_rate >= 65 else 'by' if c_rate >= 40 else 'br'
+            ), unsafe_allow_html=True)
+        with cc:
+            st.markdown(kpi_card(
+                'المتبقي غير محصّل', c_uncoll, '⏳', '#F59E0B',
+                'ريال سعودي', badge='متبقي', btype='by'
+            ), unsafe_allow_html=True)
+        with cd:
+            st.markdown(kpi_card(
+                'نسبة التحصيل', c_rate, '📊', c_color,
+                '', badge=f'{c_rate:.1f}٪',
+                btype='bg' if c_rate >= 65 else 'by' if c_rate >= 40 else 'br',
+                is_pct=True
+            ), unsafe_allow_html=True)
+
+        st.markdown('<div style="height:12px"></div>', unsafe_allow_html=True)
+
+        ct1, ct2 = st.tabs(['📋 حركات المبيعات', '💰 التحصيلات'])
+
+        # تبويب 1: حركات المبيعات
+        with ct1:
+            if not cl_s.empty:
+                sd2 = cl_s[['date','type','net','rep_name']].copy()
+                sd2.columns = ['التاريخ','النوع','المبلغ','المندوب']
+                sd2['المبلغ'] = sd2['المبلغ'].apply(lambda x: f'{x:,.0f}')
+                sd2 = sd2.sort_values('التاريخ', ascending=False).reset_index(drop=True)
+                sd2.index = range(1, len(sd2)+1)
+                st.caption(f'إجمالي {len(sd2):,} حركة — {fmt(c_tot_s)} ر.س')
+                st.dataframe(sd2, use_container_width=True, height=360,
+                    column_config={
+                        'التاريخ' : st.column_config.TextColumn('التاريخ', width='small'),
+                        'النوع'   : st.column_config.TextColumn('النوع',   width='small'),
+                        'المبلغ'  : st.column_config.TextColumn('المبلغ (ر.س)', width='medium'),
+                        'المندوب' : st.column_config.TextColumn('المندوب', width='medium'),
+                    })
+            else:
+                st.info('لا توجد حركات مبيعات لهذا العميل')
+
+        # تبويب 2: التحصيلات
+        with ct2:
+            if not cl_c.empty:
+                cd2 = cl_c[['date','collection_type','net_amount','rep_name']].copy()
+                cd2.columns = ['التاريخ','نوع التحصيل','المبلغ','المندوب']
+                cd2['المبلغ'] = cd2['المبلغ'].apply(lambda x: f'{x:,.0f}')
+                cd2 = cd2.sort_values('التاريخ', ascending=False).reset_index(drop=True)
+                cd2.index = range(1, len(cd2)+1)
+                st.caption(f'إجمالي {len(cd2):,} عملية — {fmt(c_tot_c)} ر.س  |  متبقي: {fmt(c_uncoll)} ر.س')
+                st.dataframe(cd2, use_container_width=True, height=360,
+                    column_config={
+                        'التاريخ'     : st.column_config.TextColumn('التاريخ',       width='small'),
+                        'نوع التحصيل' : st.column_config.TextColumn('نوع التحصيل',  width='small'),
+                        'المبلغ'      : st.column_config.TextColumn('المبلغ (ر.س)', width='medium'),
+                        'المندوب'     : st.column_config.TextColumn('المندوب',       width='medium'),
+                    })
+                if c_uncoll > 0:
+                    st.warning(f'⚠️ متبقي غير محصّل: **{fmt(c_uncoll)} ر.س**')
+                else:
+                    st.success('✅ تم تحصيل كل المبيعات لهذا العميل بالكامل!')
+            else:
+                st.warning(f'⚠️ لا توجد تحصيلات — كامل المبلغ {fmt(c_tot_s)} ر.س غير محصّل')
 
 # الذيل
 st.markdown("""
