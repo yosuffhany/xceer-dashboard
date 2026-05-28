@@ -14,10 +14,24 @@ def parse_quotes_file(file, q_type: str) -> list[dict]:
     # تنظيف أسماء الأعمدة
     df.columns = [str(c).strip() for c in df.columns]
 
+    import re
+
+    def _is_valid_date(s):
+        """التاريخ لازم يكون YYYY/MM/DD أو YYYY-MM-DD — مش timestamp"""
+        return bool(re.match(r'^\d{4}[/-]\d{2}[/-]\d{2}$', s.strip()[:10]))
+
+    def _is_valid_quote_no(s):
+        """رقم العرض لازم يكون أرقام فقط"""
+        return bool(re.match(r'^\d+$', str(s).strip()))
+
     records = []
     for _, row in df.iterrows():
         client = str(row.get('العميل', '') or '').strip()
         if not client or client.lower() == 'nan':
+            continue
+
+        # تجاهل الصفوف التي يبدو فيها العميل تاريخ أو وقت
+        if re.match(r'^\d{4}-\d{2}-\d{2}', client) or re.match(r'^\d{2}:\d{2}', client):
             continue
 
         # رقم أمر العمل
@@ -34,18 +48,27 @@ def parse_quotes_file(file, q_type: str) -> list[dict]:
         except Exception:
             total = 0.0
 
+        # تجاهل صفوف بدون مبلغ
+        if total <= 0:
+            continue
+
+        # رقم العرض
+        quote_no = str(row.get('رقم العرض', '') or '').strip()
+
         # المندوب
         rep = str(row.get('مندوب المبيعات', '') or '').strip()
         if not rep or rep.lower() == 'nan':
             rep = 'غير محدد'
 
-        # التاريخ
+        # التاريخ — نأخذ أول 10 حروف فقط (بدون الوقت)
         date_val = str(row.get('التاريخ', '') or '').strip()
         if date_val.lower() == 'nan':
             date_val = ''
+        else:
+            date_val = date_val[:10]  # YYYY-MM-DD or YYYY/MM/DD فقط
 
         records.append({
-            'quote_no'   : str(row.get('رقم العرض', '') or '').strip(),
+            'quote_no'   : quote_no,
             'order_no'   : order_no,
             'client'     : client,
             'rep'        : rep,

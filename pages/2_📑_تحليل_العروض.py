@@ -5,7 +5,7 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
-from db import init_db, save_quotes, get_quotes, get_all_sales_clients
+from db import init_db, save_quotes, get_quotes, get_all_sales_clients, delete_quotes
 from quotes_parser import parse_quotes_file
 
 # ══════════════════════════════════════════════════════════════
@@ -308,6 +308,32 @@ with st.sidebar:
     status_filter = st.selectbox('📊 الحالة:', ['الكل', 'غير منفذة', 'منفذة', 'منفذة - مفوترة', 'منفذة - غير مفوترة'],
                                   key='qs_filter')
 
+    st.markdown('<hr style="border-color:rgba(255,255,255,.15);margin:12px 0">', unsafe_allow_html=True)
+
+    # فلتر العميل والمندوب — نجلب الخيارات من DB مباشرة
+    _df_opts = get_quotes()
+    if not _df_opts.empty:
+        _all_clients = sorted(_df_opts['client'].dropna().unique().tolist())
+        _all_reps    = sorted([r for r in _df_opts['rep'].dropna().unique().tolist() if r and r != 'غير محدد'])
+        client_ms = st.multiselect('🏢 تصفية بالعميل:', _all_clients, key='q_client_ms',
+                                    placeholder='اختر عميل أو أكثر...')
+        rep_ms = st.multiselect('👤 تصفية بالمندوب:', _all_reps, key='q_rep_ms',
+                                 placeholder='اختر مندوب أو أكثر...')
+    else:
+        client_ms = []
+        rep_ms    = []
+
+    st.markdown('<hr style="border-color:rgba(255,255,255,.15);margin:16px 0 8px">', unsafe_allow_html=True)
+
+    # حذف العروض
+    with st.expander('🗑 إدارة البيانات'):
+        del_type = st.selectbox('النوع:', ['الكل', 'اوفست فقط', 'ديجيتال فقط'], key='q_del_type')
+        if st.button('🗑 مسح العروض المختارة', type='secondary', key='q_del_btn'):
+            qt = None if del_type == 'الكل' else del_type.replace(' فقط', '')
+            delete_quotes(qt)
+            st.success('✅ تم الحذف بنجاح')
+            st.rerun()
+
 # ══════════════════════════════════════════════════════════════
 # تحميل البيانات
 # ══════════════════════════════════════════════════════════════
@@ -351,6 +377,14 @@ elif status_filter == 'منفذة - مفوترة':
 elif status_filter == 'منفذة - غير مفوترة':
     df_q = df_q[(df_q['is_executed'] == 1) & (df_q['is_invoiced'] == 0)]
 
+# تطبيق فلتر العميل والمندوب
+client_ms = st.session_state.get('q_client_ms', [])
+rep_ms    = st.session_state.get('q_rep_ms', [])
+if client_ms:
+    df_q = df_q[df_q['client'].isin(client_ms)]
+if rep_ms:
+    df_q = df_q[df_q['rep'].isin(rep_ms)]
+
 # ══════════════════════════════════════════════════════════════
 # حسابات الملخص (على الكل بدون فلتر الحالة)
 # ══════════════════════════════════════════════════════════════
@@ -363,6 +397,10 @@ if type_filter == 'اوفست فقط':
     df_all = df_all[df_all['q_type'] == 'اوفست']
 elif type_filter == 'ديجيتال فقط':
     df_all = df_all[df_all['q_type'] == 'ديجيتال']
+if client_ms:
+    df_all = df_all[df_all['client'].isin(client_ms)]
+if rep_ms:
+    df_all = df_all[df_all['rep'].isin(rep_ms)]
 
 total_cnt   = len(df_all)
 exec_cnt    = int(df_all['is_executed'].sum())

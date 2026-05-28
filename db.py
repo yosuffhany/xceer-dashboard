@@ -293,6 +293,15 @@ def get_quotes(q_type=None):
         except Exception:
             return pd.DataFrame()
 
+def delete_quotes(q_type=None):
+    """حذف العروض — نوع معين أو الكل"""
+    with engine.connect() as conn:
+        if q_type:
+            conn.execute(text("DELETE FROM quotes WHERE q_type = :qt"), {"qt": q_type})
+        else:
+            conn.execute(text("DELETE FROM quotes"))
+        conn.commit()
+
 def get_all_sales_clients():
     """كل أسماء العملاء اللي عندهم مبيعات — لتحديد المفوتر"""
     with engine.connect() as conn:
