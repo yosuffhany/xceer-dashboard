@@ -58,15 +58,30 @@ section[data-testid="stSidebar"] [data-testid="stExpanderToggleIcon"] {
 
 /* ── زر إعادة فتح الشريط الجانبي ── */
 [data-testid="collapsedControl"] {
-  background: linear-gradient(180deg,#312E81,#4338CA) !important;
-  border-radius: 0 10px 10px 0 !important;
-  box-shadow: 3px 0 16px rgba(67,56,202,.55) !important;
-  opacity: 1 !important; visibility: visible !important;
-  min-width: 28px !important;
+  position: fixed !important;
+  left: 0 !important; top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 99999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background: linear-gradient(180deg,#312E81 0%,#7C3AED 100%) !important;
+  border-radius: 0 14px 14px 0 !important;
+  box-shadow: 4px 0 24px rgba(67,56,202,.7) !important;
+  min-width: 30px !important;
+  min-height: 72px !important;
+  cursor: pointer !important;
 }
-[data-testid="collapsedControl"] svg,
-[data-testid="collapsedControl"] button,
-[data-testid="collapsedControl"] span { color:#fff !important; fill:#fff !important }
+[data-testid="collapsedControl"] > button {
+  background: transparent !important;
+  border: none !important;
+  color: #fff !important;
+  width: 100% !important; height: 100% !important;
+  padding: 0 !important; min-height: 72px !important;
+}
+[data-testid="collapsedControl"] svg { fill: #fff !important; color: #fff !important }
 
 .stApp {
   background: linear-gradient(135deg,#EEF2FF 0%,#F0F9FF 50%,#F5F3FF 100%) !important;
