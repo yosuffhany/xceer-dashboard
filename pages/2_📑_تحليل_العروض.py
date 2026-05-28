@@ -35,32 +35,13 @@ body,p,h1,h2,h3,h4,h5,h6,label,button,input,select,textarea,
 }
 [data-testid="stExpanderToggleIcon"] { display:none !important }
 
-/* ── زر إعادة فتح الشريط الجانبي ── */
-[data-testid="collapsedControl"] {
-  position: fixed !important;
-  left: 0 !important; top: 50% !important;
-  transform: translateY(-50%) !important;
-  z-index: 99999 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  background: linear-gradient(180deg,#312E81 0%,#7C3AED 100%) !important;
-  border-radius: 0 14px 14px 0 !important;
-  box-shadow: 4px 0 24px rgba(67,56,202,.7) !important;
-  min-width: 30px !important;
-  min-height: 72px !important;
-  cursor: pointer !important;
+/* ── زرار السايدبار في الهيدر ── */
+header[data-testid="stHeader"] button[kind="header"] {
+  background: rgba(67,56,202,.12) !important;
+  border-radius: 8px !important;
+  color: #4338CA !important;
 }
-[data-testid="collapsedControl"] > button {
-  background: transparent !important;
-  border: none !important;
-  color: #fff !important;
-  width: 100% !important; height: 100% !important;
-  padding: 0 !important; min-height: 72px !important;
-}
-[data-testid="collapsedControl"] svg { fill: #fff !important; color: #fff !important }
+header[data-testid="stHeader"] button[kind="header"] svg { fill: #4338CA !important }
 
 .stApp {
   background:linear-gradient(135deg,#EEF2FF 0%,#F0F9FF 50%,#F5F3FF 100%) !important;
@@ -71,8 +52,12 @@ body,p,h1,h2,h3,h4,h5,h6,label,button,input,select,textarea,
   padding-top:1.5rem !important; padding-bottom:3rem !important;
   max-width:1400px !important;
 }
-#MainMenu,footer,header { visibility:hidden }
+#MainMenu { visibility:hidden }
+footer { visibility:hidden }
 .stDeployButton { display:none }
+header[data-testid="stHeader"] { background:transparent !important; box-shadow:none !important }
+[data-testid="stToolbar"] { visibility:hidden }
+[data-testid="stDecoration"] { display:none }
 
 /* Sidebar */
 section[data-testid="stSidebar"] {
